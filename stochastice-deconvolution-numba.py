@@ -29,6 +29,7 @@ REG_STENCIL = np.array([[0, 1, 0], [0, 0, 1]]) # [reg_x], [reg_y]
 # core functions
 @numba.jit(nopython=True)
 def data_energy(blurred_img, input_img, x, y):
+    """Computes the data term energy for a pixel."""
     height, width = blurred_img.shape
     sum_sq_diff = 0.0
     for i in range(len(PSF_COORDS)):
@@ -41,6 +42,7 @@ def data_energy(blurred_img, input_img, x, y):
 
 @numba.jit(nopython=True)
 def regularizer_energy(intrinsic_img, x, y):
+    """Evaluates the isotropic TV regularizer energy at a pixel."""
     height, width = intrinsic_img.shape
     if not (0 <= x < width and 0 <= y < height):
         return 0.0
@@ -50,6 +52,7 @@ def regularizer_energy(intrinsic_img, x, y):
 
 @numba.jit(nopython=True)
 def splat(intrinsic_img, blurred_img, x, y, ed, weight):
+    """Splats energy into the intrinsic and blurred images."""
     height, width = blurred_img.shape
     intrinsic_img[y, x] += weight * ed
     for i in range(len(PSF_COORDS)):
@@ -60,6 +63,7 @@ def splat(intrinsic_img, blurred_img, x, y, ed, weight):
 
 @numba.jit(nopython=True)
 def evaluate(intrinsic_img, blurred_img, input_img, x, y, ed):
+    """Evaluates the change in the objective function."""
     init_energy = data_energy(blurred_img, input_img, x, y)
     for i in range(REG_STENCIL.shape[1]):
         init_energy += regularizer_energy(intrinsic_img, x + REG_STENCIL[0, i], y + REG_STENCIL[1, i])
@@ -85,6 +89,7 @@ def evaluate(intrinsic_img, blurred_img, input_img, x, y, ed):
 
 @numba.jit(nopython=True)
 def mutate(intrinsic_shape, cur_x, cur_y):
+    """Mutates a sample by offsetting or resetting."""
     height, width = intrinsic_shape
     if np.random.rand() >= RESET_PROB:
         while True:
@@ -98,6 +103,7 @@ def mutate(intrinsic_shape, cur_x, cur_y):
 
 @numba.jit(nopython=True)
 def stochastic_deconvolution_core(intrinsic_img, blurred_img, input_img, ed, n_mutations):
+    """The core deconvolution loop, accelerated with Numba."""
     height, width = input_img.shape
     a_rate = 0.0
 
@@ -135,10 +141,12 @@ def stochastic_deconvolution_core(intrinsic_img, blurred_img, input_img, ed, n_m
 
 
 def load_grayscale(filename):
+    """Loads an image and converts it to a normalized grayscale numpy array."""
     img = Image.open(filename).convert('L')
     return np.array(img, dtype=np.float64) / 255.0
 
 def blur_image_fast(img):
+    """Blurs an image using the fast SciPy convolution."""
     return convolve2d(img, PSF, mode='same', boundary='symm')
 
 
