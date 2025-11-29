@@ -3,7 +3,8 @@ from PIL import Image
 import os
 import math
 import numba
-from scipy.signal import convolve2d
+
+from utils import load_grayscale, blur_image_fast
 
 # output
 SAVE_DIR = "output"
@@ -140,19 +141,6 @@ def stochastic_deconvolution_core(intrinsic_img, blurred_img, input_img, ed, n_m
 
 
 
-def load_grayscale(filename):
-    """Loads an image and converts it to a normalized grayscale numpy array."""
-    img = Image.open(filename).convert('L')
-    return np.array(img, dtype=np.float64) / 255.0
-
-def blur_image_fast(img):
-    """Blurs an image using the fast SciPy convolution."""
-    return convolve2d(img, PSF, mode='same', boundary='symm')
-
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -161,10 +149,10 @@ if __name__ == '__main__':
     except FileNotFoundError:
         print("Error: dandelion.jpg not found.")
     else:
-        blurred_img = blur_image_fast(input_img)
+        blurred_img = blur_image_fast(input_img, PSF)
         # create copies for the algorithm to modify
         intrinsic_img = blurred_img.copy()
-        current_blurred = blur_image_fast(intrinsic_img)
+        current_blurred = blur_image_fast(intrinsic_img, PSF)
         
         # "warm-up" run
         _ = stochastic_deconvolution_core(np.zeros((2,2)), np.zeros((2,2)), np.zeros((2,2)), 0.1, 1)
