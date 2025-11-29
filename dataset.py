@@ -19,8 +19,6 @@ class GoProDataset(Dataset):
     self.blur_dir = os.path.join(base_path, "blur", "images")
     self.sharp_dir = os.path.join(base_path, "sharp", "images")
     
-    print(self.blur_dir)
-    
     self.image_size = image_size
     self.augment = augment
     self.split = split
@@ -65,9 +63,9 @@ class GoProDataset(Dataset):
     img_blur_pil = Image.open(blur_img_path).convert('RGB')
     img_sharp_pil = Image.open(sharp_img_path).convert('RGB')
 
-    # Data Augmentation / Preprocessing
+    # data Augmentation / Preprocessing
     if self.is_train:      
-      # Random crop
+      # random crop
       i, j, h, w = T.RandomCrop.get_params(
         img_blur_pil, output_size=(self.image_size, self.image_size)
       )
@@ -75,15 +73,15 @@ class GoProDataset(Dataset):
       img_sharp = TF.crop(img_sharp_pil, i, j, h, w)
 
       if self.augment:
-        # Random horizontal flip
+        # random horizontal flip
         if random.random() > 0.5:
           img_blur = TF.hflip(img_blur)
           img_sharp = TF.hflip(img_sharp)
           
-        # Random vertical flip
-        if random.random() > 0.5:
-          img_blur = TF.vflip(img_blur)
-          img_sharp = TF.vflip(img_sharp)
+        # random vertical flip
+        # if random.random() > 0.5:
+        #   img_blur = TF.vflip(img_blur)
+        #   img_sharp = TF.vflip(img_sharp)
 
     else:      
       # Center crop for validation/test
@@ -100,3 +98,28 @@ class GoProDataset(Dataset):
 # TODO add more datasets
 # path = kagglehub.dataset_download("darthvader4067/hideblur")
 
+class HideBlurDataset():
+  def __init__(self, split='train', image_size=256, augment=True):
+    """
+    split: 'train' (80%), 'val' (10%), or 'test' (10%)
+    """
+    super().__init__()
+    
+    # download/Locate Dataset
+    path = kagglehub.dataset_download("darthvader4067/hideblur")
+    base_path = os.path.join(path, "hideblur")
+        
+    # TODO
+    # self.blur_dir = os.path.join(base_path, "blur", "images")
+    # self.sharp_dir = os.path.join(base_path, "sharp", "images")
+    
+    # self.image_size = image_size
+    # self.augment = augment
+    # self.split = split
+    
+    # # get all files and Sort them
+    # all_blur_files = sorted(os.listdir(self.blur_dir))
+    # all_sharp_files = sorted(os.listdir(self.sharp_dir))
+    
+    # # basic sanity check
+    # assert len(all_blur_files) == len(all_sharp_files) and len(all_blur_files) > 0, "Empty or mismatched dataset"

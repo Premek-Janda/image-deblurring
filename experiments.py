@@ -1,6 +1,5 @@
 from utils import (
   DEVICE,
-  MODEL_SAVE_PATH,
   IMAGE_SIZE, 
   BATCH_SIZE,
   NUM_EPOCHS,
@@ -85,31 +84,30 @@ def full_training_loop(model, train_loader, val_loader):
 
     for epoch in range(NUM_EPOCHS):
         model.train()
+        print()
         loop = tqdm(train_loader, desc=f"Epoch [{epoch+1}/{NUM_EPOCHS}]", leave=True)
         
         avg_train_loss = train_epoch(train_loader, model, optimizer, loss_fn, loop)
         val_loss, val_metric = validate(val_loader, model, loss_fn, psnr_metric)
         
-        print(f"\nEND OF EPOCH {epoch+1}:")
         print(f"  Average Train Loss: {avg_train_loss:.4f}")
         print(f"  Average Val Loss: {val_loss:.4f}")
         print(f"  Val PSNR: {val_metric:.2f} dB")
         
         if val_metric > best_val_metric:
             best_val_metric = val_metric
-            torch.save(model.state_dict(), MODEL_SAVE_PATH)
-            print(f"  -> New best PSNR! Model saved at {MODEL_SAVE_PATH}")
+            torch.save(model.state_dict(), f"best_model_{model.__class__.__name__}.pth")
+            print("    New best PSNR")
 
     print("Training completed.")
 
-def experiment_1(train_loader, val_loader, test_loader):
-  print("Starting Experiment 1: Single Convolution Model")
-  model = DeblurringSimple().to(DEVICE)
+def experiment_1(model: nn.Module, train_loader, val_loader, test_loader):
+  print("Experiment 1")
   
   full_training_loop(model, train_loader, val_loader)
   
   # load best model for testing
-  model.load_state_dict(torch.load(MODEL_SAVE_PATH))
+  model.load_state_dict(torch.load(f"best_model_{model.__class__.__name__}.pth"))
   print("Loaded best model for testing.")
   
   # run Test
@@ -121,13 +119,32 @@ def experiment_1(train_loader, val_loader, test_loader):
   plot_image_comparison(model, test_loader, title_prefix="Test Set Result")
   plot_kernel_comparison(model)
 
+
+def show_last_best(model: nn.Module, test_loader):
+  print("Loaded last best model")
+  
+  model.load_state_dict(torch.load(f"best_model_{model.__class__.__name__}.pth"))
+  eval_metric = PeakSignalNoiseRatio(data_range=1.0).to(DEVICE)
+  
+  # visual Analysis
+  plot_image_comparison(model, test_loader, eval_metric, title="Best model image comparison")
+  plot_kernel_comparison(model)
+
 if __name__ == "__main__":  
-  train_dataset = GoProDataset(split='train', image_size=IMAGE_SIZE, augment=True)
-  val_dataset   = GoProDataset(split='val', image_size=IMAGE_SIZE, augment=False)
-  test_dataset  = GoProDataset(split='test', image_size=IMAGE_SIZE, augment=False)
+  ### model and dataset selection
+  model = DeblurringSimple().to(DEVICE)
+  dataset = GoProDataset
+  
+  train_dataset = dataset(split='train', image_size=IMAGE_SIZE, augment=True)
+  val_dataset   = dataset(split='val', image_size=IMAGE_SIZE, augment=False)
+  test_dataset  = dataset(split='test', image_size=IMAGE_SIZE, augment=False)
 
   train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
   val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
   test_loader  = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
   
-  experiment_1(train_loader, val_loader, test_loader)
+  # experiment_1(model, train_loader, val_loader, test_loader)
+  
+  # 
+  show_last_best(model, test_loader)
+  
