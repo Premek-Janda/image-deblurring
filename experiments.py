@@ -101,8 +101,11 @@ def full_training_loop(model, train_loader, val_loader):
 
     print("Training completed.")
 
+
+
+### experiments
 def experiment_1(model: nn.Module, train_loader, val_loader, test_loader):
-  print("Experiment 1")
+  print("\nExperiment 1")
   
   full_training_loop(model, train_loader, val_loader)
   
@@ -118,6 +121,17 @@ def experiment_1(model: nn.Module, train_loader, val_loader, test_loader):
   # visual Analysis
   plot_image_comparison(model, test_loader, title_prefix="Test Set Result")
   plot_kernel_comparison(model)
+  
+# TODO add more experiments
+def experiment_2(model: nn.Module, train_loader, val_loader, test_loader):
+  print("\nExperiment 2")
+  # TODO implement experiment 2
+  
+
+def experiment_3(model: nn.Module, train_loader, val_loader, test_loader):
+  print("\nExperiment 3")
+  # TODO implement experiment 3
+
 
 
 def show_last_best(model: nn.Module, test_loader):
@@ -130,11 +144,17 @@ def show_last_best(model: nn.Module, test_loader):
   plot_image_comparison(model, test_loader, eval_metric, title="Best model image comparison")
   plot_kernel_comparison(model)
 
+
+
+
+
+
 if __name__ == "__main__":  
   ### model and dataset selection
   model = DeblurringSimple().to(DEVICE)
   dataset = GoProDataset
   
+  ### dataset and loaders
   train_dataset = dataset(split='train', image_size=IMAGE_SIZE, augment=True)
   val_dataset   = dataset(split='val', image_size=IMAGE_SIZE, augment=False)
   test_dataset  = dataset(split='test', image_size=IMAGE_SIZE, augment=False)
@@ -143,8 +163,10 @@ if __name__ == "__main__":
   val_loader   = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
   test_loader  = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
   
-  # experiment_1(model, train_loader, val_loader, test_loader)
+  ### experiments
+  experiment_1(model, train_loader, val_loader, test_loader)
+  # TODO add more experiments
   
-  # 
+  ### show the best result
   show_last_best(model, test_loader)
   
