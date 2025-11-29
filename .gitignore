@@ -1,3 +1,14 @@
+# custom
+*.png
+*.pth
+stochastic-deconvolution.py
+stochastic-deconvolution.ipynb
+
+
+
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
