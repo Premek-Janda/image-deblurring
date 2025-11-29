@@ -43,8 +43,6 @@ def plot_image_comparison(model, loader, eval_metric, title=""):
     plt.imshow(sharp_img)
     plt.title("Target")
     plt.axis('off')
-    
-    plt.show()
 
 def plot_kernel_comparison(model):
     # this only works for the simple convolution model
@@ -56,6 +54,24 @@ def plot_kernel_comparison(model):
         plt.imshow(weights, cmap='viridis')
         plt.colorbar()
         plt.title("Learned Kernel (Channel 0)")
-        plt.show()
     else:
         print("Model does not have a single convolution layer to inspect.")
+
+
+def display_image_comparison(blurred_img, sharpened_image, mask=None):
+    
+    # display
+    _, axes = plt.subplots(1, 2 if mask is None else 3, figsize=(18, 6))
+
+    axes[0].imshow(blurred_img, cmap='gray')
+    axes[0].set_title('Blurry original')
+    axes[0].axis('off')
+
+    axes[1].imshow(sharpened_image, cmap='gray')
+    axes[1].set_title('Sharpened')
+    axes[1].axis('off')
+
+    if mask is not None:
+        axes[2].imshow(mask, cmap='gray')
+        axes[2].set_title('Edge Mask')
+        axes[2].axis('off')
