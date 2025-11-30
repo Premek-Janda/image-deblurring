@@ -1,2 +1,2 @@
-# POVa Projct on image deblurring
+# POVa Project on image deblurring
 

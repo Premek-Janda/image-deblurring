@@ -1,7 +1,10 @@
 
 from utils import (
-  np, torch, plt, DEVICE
+    DEVICE,
+    os, np, plt,
+    nn, torch, PeakSignalNoiseRatio,
 )
+from models import DeblurringSimple 
 
 def plot_image_comparison(model, loader, eval_metric, title=""):
     model.eval()
@@ -56,6 +59,30 @@ def plot_kernel_comparison(model):
         plt.title("Learned Kernel (Channel 0)")
     else:
         print("Model does not have a single convolution layer to inspect.")
+
+
+def compare_models(test_loader):
+    print("Loaded last best model")
+    
+    # load images
+    data_blur, data_sharp = next(iter(test_loader))
+    data_blur = data_blur.to(DEVICE)
+    data_sharp = data_sharp.to(DEVICE)
+    
+    for file in os.listdir('.'):
+        if file.endswith(".pth"):
+            # TODO load model 
+            model_name = file.replace("best_model_", "").replace(".pth", "")
+            model = globals()[model_name]().to(DEVICE)
+            model.load_state_dict(torch.load(file))
+            eval_metric = PeakSignalNoiseRatio(data_range=1.0).to(DEVICE)
+            outputs = model(data_blur)
+            eval_res = eval_metric(outputs, data_sharp).item()
+            # evaluate model
+            print(f"Model {model.__class__.__name__} PSNR: {eval_res:.2f}")
+    
+    # visual Analysis
+    plot_kernel_comparison(model)
 
 
 def display_image_comparison(blurred_img, sharpened_image, mask=None):
