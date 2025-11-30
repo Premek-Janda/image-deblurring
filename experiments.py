@@ -12,7 +12,7 @@ from utils import (
 )
 from dataset import GoProDataset
 from models import DeblurringSimple
-from visualize import plot_image_comparison, plot_kernel_comparison, compare_models
+from visualize import plot_one_image_comparison, plot_kernel_comparison, compare_models
 
 
 def train_epoch(loader, model, optimizer, loss_fn, loop):
@@ -125,7 +125,7 @@ def experiment_1(model: nn.Module, train_loader, val_loader, test_loader):
     test(test_loader, model, loss_fn, psnr_metric)
 
     # visual Analysis
-    plot_image_comparison(model, test_loader, title_prefix="Test Set Result")
+    plot_one_image_comparison(model, test_loader, psnr_metric, "Test Set Result")
     plot_kernel_comparison(model)
 
 
@@ -147,7 +147,7 @@ def show_last_best(model: nn.Module, test_loader):
     eval_metric = PeakSignalNoiseRatio(data_range=1.0).to(DEVICE)
 
     # visual Analysis
-    plot_image_comparison(model, test_loader, eval_metric, title="Best model image comparison")
+    plot_one_image_comparison(model, test_loader, eval_metric, "Best model image comparison")
     plot_kernel_comparison(model)
 
 

@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 
 import cv2
 from scipy.signal import convolve2d
-from skimage.metrics import peak_signal_noise_ratio
+from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -32,11 +32,15 @@ BATCH_SIZE = 2
 NUM_EPOCHS = 10
 IMAGE_SIZE = 256 # size of cropped images
 
+# image blur
+BLUR_KERNEL_SIZE = 5
+
+
 # other constants
 MODEL_SAVE_PATH = "best_model.pth"
 
 
-def blur_psf(kernel_size=9):
+def blur_psf(kernel_size=BLUR_KERNEL_SIZE):
 	"""Creates a normalized blur kernel (point spread function) with a given kernel size."""
 	psf_matrix = np.zeros((kernel_size, kernel_size))
 
@@ -45,7 +49,7 @@ def blur_psf(kernel_size=9):
 
 	return psf_matrix
 
-def blur_psf_coords(kernel_size=9):
+def blur_psf_coords(kernel_size=BLUR_KERNEL_SIZE):
 	"""Creates a list of PSF coordinates and their values for convolution."""
 	psf_coords = []
 	for i in range(kernel_size):
@@ -69,9 +73,9 @@ def blur_image_fast(img, psf):
 	"""Blurs an image using the fast SciPy convolution."""
 	return convolve2d(img, psf, mode='same', boundary='symm')
 
-def load_blurred_image(filename, blur_kernel=5, scale=True):
+def load_blurred_image(filename, blur_kernel_size=BLUR_KERNEL_SIZE, scale=True):
 	"""Loads an image, converts it to grayscale, and applies blur using the given PSF."""
 	img = load_grayscale(filename, scale=scale)
-	psf = blur_psf(kernel_size=blur_kernel)
+	psf = blur_psf(kernel_size=blur_kernel_size)
 	blurred_img = blur_image_fast(img, psf=psf)
 	return blurred_img

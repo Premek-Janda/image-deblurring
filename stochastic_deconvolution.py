@@ -1,4 +1,5 @@
 from utils import (
+    BLUR_KERNEL_SIZE,
     peak_signal_noise_ratio,
     blur_psf, blur_psf_coords,
     load_grayscale, blur_image_fast, 
@@ -134,7 +135,7 @@ def stochastic_deconvolution_core(intrinsic_img, blurred_img, input_img, ed, n_m
     return a_rate / n_mutations
 
 
-def stochastic_deconvolution(blurred_img=None, blur_kernel_size=5, verbose=True):
+def stochastic_deconvolution(blurred_img=None, blur_kernel_size=BLUR_KERNEL_SIZE, verbose=True):
     """Wrapper for the Numba-accelerated stochastic deconvolution core."""
     input_img = load_grayscale("dandelion.jpg")
     
