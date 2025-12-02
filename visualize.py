@@ -5,7 +5,7 @@ from utils import (
     nn, torch, PeakSignalNoiseRatio,
     load_blurred_image, load_grayscale
 )
-from models import DeblurringSimple
+from models import DeblurringSimple, UNet
 
 def plot_one_image_comparison(model, loader, eval_metric, title=""):
     model.eval()
@@ -75,7 +75,7 @@ def compare_models(test_loader):
             # TODO load model 
             model_name = file.replace("best_model_", "").replace(".pth", "")
             model = globals()[model_name]().to(DEVICE)
-            model.load_state_dict(torch.load(file))
+            model.load_state_dict(torch.load(file, map_location=DEVICE))
             eval_metric = PeakSignalNoiseRatio(data_range=1.0).to(DEVICE)
             outputs = model(data_blur)
             eval_res = eval_metric(outputs, data_sharp).item()

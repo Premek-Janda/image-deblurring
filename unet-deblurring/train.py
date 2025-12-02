@@ -161,7 +161,7 @@ SHARP_DIR_TRAIN = os.path.join(BASE_DIR, "train/sharp")
 BLUR_DIR_VAL = os.path.join(BASE_DIR, "test/blur")
 SHARP_DIR_VAL = os.path.join(BASE_DIR, "test/sharp")
 
-MODEL_SAVE_PATH = "best_deblur_unet_gopro.pth" # We'll save the *best* model
+MODEL_SAVE_PATH = "best_model_UNet.pth" # We'll save the *best* model
 
 # --- Validation Function ---
 # This function will be called at the end of each epoch to use the "test directory"

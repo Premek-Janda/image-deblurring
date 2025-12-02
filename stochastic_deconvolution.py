@@ -137,6 +137,9 @@ def stochastic_deconvolution_core(intrinsic_img, blurred_img, input_img, ed, n_m
 
 def stochastic_deconvolution(blurred_img=None, blur_kernel_size=BLUR_KERNEL_SIZE, verbose=True):
     """Wrapper for the Numba-accelerated stochastic deconvolution core."""
+    # Create output directory if it doesn't exist
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    
     input_img = load_grayscale("dandelion.jpg")
     
     psf = blur_psf(blur_kernel_size)
