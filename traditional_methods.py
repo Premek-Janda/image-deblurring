@@ -67,7 +67,77 @@ def sd(blurred_img, blur_kernel_size=BLUR_KERNEL_SIZE):
     sharpened_image = stochastic_deconvolution(blurred_img, blur_kernel_size, verbose=False)
     return sharpened_image
 
+def wiener_deconvolution(blurred_img):
+    # Wiener filter deconvolution - estimates noise-to-signal ratio
+    from scipy.signal import wiener
+    # Apply Wiener filter
+    sharpened = wiener(blurred_img, (5, 5))
+    return np.clip(sharpened, 0, 1)
 
+def bilateral_filter(blurred_img):
+    # Bilateral filter - edge-preserving smoothing then sharpening
+    img_uint8 = (blurred_img * 255).astype(np.uint8)
+    # Apply bilateral filter (preserves edges while reducing noise)
+    filtered = cv2.bilateralFilter(img_uint8, 9, 75, 75)
+    # Then apply sharpening
+    sharpening_kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    sharpened = cv2.filter2D(filtered, -1, sharpening_kernel)
+    return sharpened.astype(np.float32) / 255.0
+
+def richardson_lucy(blurred_img, iterations=30):
+    # Richardson-Lucy deconvolution algorithm
+    from scipy.signal import convolve2d
+    # Create a simple Gaussian PSF
+    psf = cv2.getGaussianKernel(9, 2.0)
+    psf = psf @ psf.T
+    psf = psf / psf.sum()
+    
+    # Richardson-Lucy iterations
+    estimate = blurred_img.copy()
+    for _ in range(iterations):
+        # Convolve estimate with PSF
+        conv = convolve2d(estimate, psf, mode='same', boundary='symm')
+        # Avoid division by zero
+        relative_blur = blurred_img / (conv + 1e-10)
+        # Update estimate
+        estimate = estimate * convolve2d(relative_blur, psf[::-1, ::-1], mode='same', boundary='symm')
+    
+    return np.clip(estimate, 0, 1)
+
+def high_pass_filter(blurred_img):
+    # High-pass filter to enhance edges
+    # Create Gaussian low-pass filter
+    low_pass = cv2.GaussianBlur(blurred_img, (21, 21), 5)
+    # Subtract from original to get high-pass
+    high_pass = blurred_img - low_pass
+    # Add back to original with scaling
+    sharpened = blurred_img + 1.5 * high_pass
+    return np.clip(sharpened, 0, 1)
+
+def median_filter_sharpen(blurred_img):
+    # Median filter to reduce noise, then sharpen
+    img_uint8 = (blurred_img * 255).astype(np.uint8)
+    # Apply median filter
+    filtered = cv2.medianBlur(img_uint8, 5)
+    # Create strong sharpening kernel
+    kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+    sharpened = cv2.filter2D(filtered, -1, kernel)
+    return np.clip(sharpened.astype(np.float32) / 255.0, 0, 1)
+
+def gradient_based_sharpening(blurred_img):
+    # Use image gradients to enhance edges
+    # Convert to uint8 for Sobel operation
+    img_uint8 = (blurred_img * 255).astype(np.uint8)
+    # Compute gradients
+    grad_x = cv2.Sobel(img_uint8, cv2.CV_32F, 1, 0, ksize=3)
+    grad_y = cv2.Sobel(img_uint8, cv2.CV_32F, 0, 1, ksize=3)
+    # Gradient magnitude
+    gradient_mag = np.sqrt(grad_x**2 + grad_y**2)
+    # Normalize gradient
+    gradient_mag = gradient_mag / 255.0
+    # Add gradient magnitude to enhance edges
+    sharpened = blurred_img + 0.3 * gradient_mag
+    return np.clip(sharpened, 0, 1)
 
 ## comparison
 def run_comparison(methods, filename="dandelion.jpg"):
@@ -106,6 +176,12 @@ if __name__ == "__main__":
         ("Sharpening Kernel", sharpening),
         ("Laplacian Sharpening", laplacian_sharpening),
         ("CLAHE Enhancement", clahe_enhancement),
+        ("Wiener Deconvolution", wiener_deconvolution),
+        ("Bilateral Filter", bilateral_filter),
+        ("Richardson-Lucy", richardson_lucy),
+        ("High-Pass Filter", high_pass_filter),
+        ("Median Filter + Sharpen", median_filter_sharpen),
+        ("Gradient-Based Sharpening", gradient_based_sharpening),
         ("Stochastic Deconvolution", sd),
     ]
 
