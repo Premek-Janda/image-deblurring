@@ -86,3 +86,19 @@ class UNet(nn.Module):
     logits = self.outc(x)
     return self.final_activation(logits)
 
+
+class DeblurGANv2Generator(nn.Module):
+    def __init__(self, in_channels=3, out_channels=3, base=64):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels, base, 3, 1, 1)
+        self.res_blocks = nn.Sequential(
+            *[ResidualBlock(base) for _ in range(8)]
+        )
+        self.conv2 = nn.Conv2d(base, out_channels, 3, 1, 1)
+
+    def forward(self, x):
+        residual = x
+        x = self.conv1(x)
+        x = self.res_blocks(x)
+        x = self.conv2(x)
+        return torch.sigmoid(x + residual)
