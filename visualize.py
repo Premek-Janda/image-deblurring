@@ -5,7 +5,7 @@ from utils import (
     nn, torch, PeakSignalNoiseRatio,
     load_blurred_image, load_grayscale
 )
-from models import DeblurringSimple, UNet
+from models import DeblurringSimple, UNet, DeblurCNN, AutoEncoder
 
 def plot_one_image_comparison(model, loader, eval_metric, title=""):
     model.eval()

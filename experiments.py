@@ -11,7 +11,6 @@ from utils import (
     PeakSignalNoiseRatio,
 )
 from dataset import GoProDataset
-from models import DeblurringSimple
 from visualize import plot_one_image_comparison, plot_kernel_comparison, compare_models
 
 
@@ -153,7 +152,6 @@ def show_last_best(model: nn.Module, test_loader):
 
 if __name__ == "__main__":
     ### model and dataset selection
-    model = DeblurringSimple().to(DEVICE)
     dataset = GoProDataset
 
     ### dataset and loaders
@@ -165,12 +163,12 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
 
-    ### experiments
+    # from models import DeblurCNN
+    # model = DeblurCNN().to(DEVICE)
     # experiment_1(model, train_loader, val_loader, test_loader)
-    # TODO add more experiments
-
-    ### show the best result
-    # show_last_best(model, test_loader)
     
     ### compare all models
+    print("\n" + "="*50)
+    print("Comparing All Models")
+    print("="*50)
     compare_models(test_loader)

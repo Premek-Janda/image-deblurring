@@ -87,6 +87,95 @@ class UNet(nn.Module):
     return self.final_activation(logits)
 
 
+class ResidualBlock(nn.Module):
+  """Residual block with two convolutions and skip connection"""
+  def __init__(self, channels):
+    super().__init__()
+    self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+    self.bn1 = nn.BatchNorm2d(channels)
+    self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+    self.bn2 = nn.BatchNorm2d(channels)
+    self.relu = nn.ReLU(inplace=True)
+    
+  def forward(self, x):
+    residual = x
+    out = self.relu(self.bn1(self.conv1(x)))
+    out = self.bn2(self.conv2(out))
+    out += residual
+    out = self.relu(out)
+    return out
+
+
+class DeblurCNN(nn.Module):
+  """Multi-layer CNN with residual connections for deblurring"""
+  def __init__(self, in_channels=3, out_channels=3, base_filters=64):
+    super().__init__()
+    
+    # Initial feature extraction
+    self.conv_in = nn.Sequential(
+      nn.Conv2d(in_channels, base_filters, kernel_size=7, padding=3),
+      nn.ReLU(inplace=True)
+    )
+    
+    # Deep feature processing with residual blocks
+    self.res_blocks = nn.Sequential(
+      ResidualBlock(base_filters),
+      ResidualBlock(base_filters),
+      ResidualBlock(base_filters),
+      ResidualBlock(base_filters),
+      ResidualBlock(base_filters)
+    )
+    
+    # Reconstruction
+    self.conv_out = nn.Sequential(
+      nn.Conv2d(base_filters, base_filters, kernel_size=3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(base_filters, out_channels, kernel_size=3, padding=1),
+      nn.Sigmoid()
+    )
+    
+  def forward(self, x):
+    x = self.conv_in(x)
+    x = self.res_blocks(x)
+    x = self.conv_out(x)
+    return x
+
+
+class AutoEncoder(nn.Module):
+  """Simple encoder-decoder architecture for deblurring"""
+  def __init__(self, in_channels=3, out_channels=3):
+    super().__init__()
+    
+    # Encoder
+    self.encoder = nn.Sequential(
+      nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1),  # /2
+      nn.ReLU(inplace=True),
+      nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),  # /4
+      nn.BatchNorm2d(128),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),  # /8
+      nn.BatchNorm2d(256),
+      nn.ReLU(inplace=True)
+    )
+    
+    # Decoder
+    self.decoder = nn.Sequential(
+      nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # *2
+      nn.BatchNorm2d(128),
+      nn.ReLU(inplace=True),
+      nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),  # *2
+      nn.BatchNorm2d(64),
+      nn.ReLU(inplace=True),
+      nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1),  # *2
+      nn.Sigmoid()
+    )
+    
+  def forward(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+
+
 class DeblurGANv2Generator(nn.Module):
     def __init__(self, in_channels=3, out_channels=3, base=64):
         super().__init__()
