@@ -1,6 +1,4 @@
 # custom
-*.png
-*.pth
 stochastic-deconvolution.py
 stochastic-deconvolution.ipynb
 
